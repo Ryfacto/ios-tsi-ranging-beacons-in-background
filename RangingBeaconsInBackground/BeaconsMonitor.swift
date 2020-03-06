@@ -58,23 +58,27 @@ class BeaconsMonitor: NSObject, CLLocationManagerDelegate {
   
   func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
     say("Did enter region \(region.identifier).")
-    beginRangingBeacons()
+    manager.requestState(for: region)
   }
   
   func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
     say("Did exit region \(region.identifier).")
+    manager.requestState(for: region)
   }
   
   func locationManager(_ manager: CLLocationManager, didDetermineState state: CLRegionState, for region: CLRegion) {
     print("\(state) region '\(region.identifier)'.")
     if state == .inside {
       beginRangingBeacons()
+    } else if state == .outside {
+      endRangingBeacons()
     }
   }
   
   func locationManager(_ manager: CLLocationManager, didRange beacons: [CLBeacon], satisfying beaconConstraint: CLBeaconIdentityConstraint) {
     let message = "\(beacons.count) beacons found in region \(region.identifier)."
     print(message)
+    print("Beacons are : \(beacons).")
     sayButNotTooOften(message)
   }
   
@@ -84,16 +88,15 @@ class BeaconsMonitor: NSObject, CLLocationManagerDelegate {
   
   private func beginRanging() {
     activateAudioSession()
+    locationManager.startUpdatingLocation()
     locationManager.startMonitoring(for: region)
     locationManager.requestState(for: region)
-    locationManager.startUpdatingLocation()
-    beginRangingBeacons()
   }
   
   private func endRanging() {
     terminateAudioSession()
-    locationManager.stopMonitoring(for: region)
     locationManager.stopUpdatingLocation()
+    locationManager.stopMonitoring(for: region)
     endRangingBeacons()
   }
   
